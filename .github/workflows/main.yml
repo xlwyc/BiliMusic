@@ -1,5 +1,6 @@
 name: Flutter Windows CI
 
+# 指定触发条件：当有提交(push)或 Pull Request 发生在 main 分支时触发
 on:
   push:
     branches:
@@ -10,28 +11,46 @@ on:
 
 jobs:
   build:
+    # 运行环境选择 Windows
     runs-on: windows-latest
 
     steps:
+      # 第一步：检出当前的仓库代码
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # 第二步：设置 Flutter 环境，并指定 Flutter 版本
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.0.0'  # 设置为你项目支持的 Flutter 版本
+          flutter-version: '3.0.0'  # 项目依赖 Flutter 3.0.0 版本，确保版本正确
 
+      # 第三步：获取项目的所有依赖
       - name: Install dependencies
         run: flutter pub get
 
+      # 第四步：启用 Windows 桌面支持
       - name: Enable Windows desktop support
         run: flutter config --enable-windows-desktop
 
-      - name: Build Windows app
-        run: flutter build windows --release
+      # 第五步：安装 CMake，这是构建 Windows 必备的工具
+      - name: Install CMake
+        run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
 
+      # 第六步：安装 Visual Studio 及相关的 Windows 桌面构建工具链
+      - name: Install Visual Studio dependencies
+        run: |
+          choco install visualstudio2022community --params "--add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended --includeOptional"
+          choco install visualstudio2022buildtools --params "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --includeOptional"
+          choco install visualstudio2022-workload-nativedesktop
+
+      # 第七步：进行项目的 Windows 版本的编译
+      - name: Build Windows app
+        run: flutter build windows --release  # 使用 Flutter 的 Windows 构建命令
+
+      # 第八步：将编译后的 Windows 可执行文件作为构建产物上传到 GitHub
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: BiliMusic-Windows
-          path: build/windows/runner/Release
+          path: build/windows/runner/Release  # 可执行文件的路径
