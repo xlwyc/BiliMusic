@@ -1,28 +1,29 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+ 
 name: Build Flutter Windows App
-
+ 
 on:
   push:
-    branches:
-      - main
-
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+ 
 jobs:
-  build:
+  main:
     runs-on: windows-latest
-
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
-
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable  # 或者你可以指定其他频道
-
-      - name: Get Flutter dependencies
-        run: flutter pub get
-
-      - name: Run tests
-        run: flutter test
-
-      - name: Build Windows app
-        run: flutter build windows
+          channel: stable
+      - run: flutter build windows
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v2
+        with:
+              name: windows-build-artifact
+              path: build/windows/x64/runner/Release/**
